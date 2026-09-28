@@ -4,7 +4,6 @@ import KernelCore
 import LumiLoggingKit
 import os
 import ProviderDocsView
-import ProviderRootView
 import ProviderToast
 
 // MARK: - Toast SuperPlugin
@@ -36,9 +35,29 @@ public final class ToastSuperPlugin: SuperPlugin, SuperLog {
     public let center = ToastCenter()
 
     /// Stable root-overlay identifier used for mounting and removal.
-    static let overlayID = "lumi-plugin-toast"
+    public static let overlayID = "lumi-plugin-toast"
 
-    public init() {}
+    public typealias OverlayInstaller = @MainActor (
+        _ kernel: KernelCoreContainer,
+        _ center: ToastCenter
+    ) -> Void
+    public typealias OverlayUninstaller = @MainActor (_ kernel: KernelCoreContainer) -> Void
+
+    private let overlayInstaller: OverlayInstaller?
+    private let overlayUninstaller: OverlayUninstaller?
+
+    /// Creates the shared Toast plugin.
+    ///
+    /// Root-view implementations differ between host applications. The host
+    /// therefore injects the small mount/unmount operation instead of the
+    /// shared package depending on one concrete RootViewProviding module.
+    public init(
+        overlayInstaller: OverlayInstaller? = nil,
+        overlayUninstaller: OverlayUninstaller? = nil
+    ) {
+        self.overlayInstaller = overlayInstaller
+        self.overlayUninstaller = overlayUninstaller
+    }
 
     public func onRegister(kernel: KernelCoreContainer) throws {
         kernel.resolveProvider((any DocsViewProviding).self)?.addAbout(
@@ -56,22 +75,11 @@ public final class ToastSuperPlugin: SuperPlugin, SuperLog {
         kernel.unregisterProvider((any ToastProviding).self)
         try kernel.registerProvider((any ToastProviding).self, center)
 
-        guard let rootView = kernel.resolveProvider((any RootViewProviding).self) else {
-            Self.logger.error("\(self.t)RootViewProviding not registered; skip overlay mount")
-            return
-        }
-
-        let center = self.center
-        rootView.addOverlays([
-            RootOverlayItem(id: Self.overlayID, order: 10_000) { content in
-                ToastOverlay(content: content, center: center)
-            },
-        ])
+        overlayInstaller?(kernel, center)
     }
 
     public func onShutdown(kernel: KernelCoreContainer) throws {
         center.dismiss()
-        kernel.resolveProvider((any RootViewProviding).self)?
-            .removeOverlays(ids: [Self.overlayID])
+        overlayUninstaller?(kernel)
     }
 }

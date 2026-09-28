@@ -1,5 +1,4 @@
 import KernelCore
-import ProviderRootView
 import ProviderToast
 import XCTest
 @testable import PluginToast
@@ -18,15 +17,17 @@ final class ToastSuperPluginTests: XCTestCase {
 
     func testToastPluginMountsOverlayOnRootView() throws {
         let kernel = KernelCoreContainer()
-        let rootView = DefaultRootViewProviding()
-        try kernel.registerProvider((any RootViewProviding).self, rootView)
+        var isMounted = false
 
-        let plugin = ToastSuperPlugin()
+        let plugin = ToastSuperPlugin(
+            overlayInstaller: { _, _ in isMounted = true },
+            overlayUninstaller: { _ in isMounted = false }
+        )
         try plugin.onBoot(kernel: kernel)
-        XCTAssertTrue(rootView.overlays.contains { $0.id == ToastSuperPlugin.overlayID })
+        XCTAssertTrue(isMounted)
 
         try plugin.onShutdown(kernel: kernel)
-        XCTAssertFalse(rootView.overlays.contains { $0.id == ToastSuperPlugin.overlayID })
+        XCTAssertFalse(isMounted)
     }
 
     func testDismissClearsTheCurrentToast() {
