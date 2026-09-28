@@ -20,6 +20,20 @@ final class ToastCenterAdditionalTests: XCTestCase {
         XCTAssertEqual(center.currentToast?.title, "Second")
         center.dismiss()
     }
+
+    func testLoadingReplacesToastAndCanBeDismissed() {
+        let center = ToastCenter()
+        center.show(LumiToast(title: "First", style: .info))
+
+        center.showLoading(title: "Loading", detail: "Preparing")
+
+        XCTAssertNil(center.currentToast)
+        XCTAssertEqual(center.currentLoading?.title, "Loading")
+        XCTAssertEqual(center.currentLoading?.detail, "Preparing")
+
+        center.dismissLoading()
+        XCTAssertNil(center.currentLoading)
+    }
 }
 
 @MainActor

@@ -10,11 +10,13 @@ import ProviderToast
 /// 节流策略：新 toast 到达时取消上一个消失计时器并重启——连续高频调用
 /// 不会堆叠成一串 toast，只会持续刷新当前这一条。
 @MainActor
-public final class ToastCenter: ObservableObject, ToastProviding {
+public final class ToastCenter: ObservableObject, ToastLoadingProviding {
     /// 当前显示的 toast；`nil` 表示不显示。
     @Published public private(set) var currentToast: LumiToast?
     /// 当前需要用户明确关闭的错误；`nil` 表示不显示错误面板。
     @Published public private(set) var currentError: LumiErrorNotice?
+    /// 当前需要持续展示的加载状态；展示普通 Toast 时自动清除。
+    @Published public private(set) var currentLoading: LumiLoadingNotice?
 
     private var dismissTask: Task<Void, Never>?
     private static let defaultDisplayDuration: Duration = .seconds(3)
@@ -24,6 +26,7 @@ public final class ToastCenter: ObservableObject, ToastProviding {
     // MARK: - ToastProviding
 
     public func show(_ toast: LumiToast) {
+        currentLoading = nil
         currentToast = toast
 
         // 重启消失计时器：实现"替换式"节流。
@@ -44,10 +47,25 @@ public final class ToastCenter: ObservableObject, ToastProviding {
         currentError = nil
     }
 
+    public func showLoading(title: String, detail: String?) {
+        dismissTask?.cancel()
+        currentToast = nil
+        currentLoading = LumiLoadingNotice(title: title, detail: detail)
+    }
+
+    public func dismissLoading() {
+        currentLoading = nil
+    }
+
+    public func dismissAll() {
+        dismiss()
+    }
+
     /// 立即隐藏当前 toast（供测试与调试）。
     public func dismiss() {
         dismissTask?.cancel()
         currentToast = nil
         currentError = nil
+        currentLoading = nil
     }
 }

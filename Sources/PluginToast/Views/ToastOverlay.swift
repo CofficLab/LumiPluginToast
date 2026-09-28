@@ -27,11 +27,26 @@ public struct ToastOverlay<Content: View>: View {
                     if let toast = center.currentToast {
                         ToastBannerView(toast: toast)
                             .appStatusPresentationTransition(preference: motionPreference)
+                    } else if let loading = center.currentLoading {
+                        AppStatusBanner(
+                            kind: .loading,
+                            title: loading.title,
+                            message: loading.detail
+                        )
+                        .frame(maxWidth: 380, alignment: .leading)
+                        .appShadow(.xl)
+                        .padding(.horizontal, DesignTokens.Spacing.md)
+                        .padding(.top, DesignTokens.Spacing.sm)
+                        .appStatusPresentationTransition(preference: motionPreference)
                     }
                 }
                 .animation(
                     LumiMotion.enabled(LumiMotion.statusPresentation, preference: motionPreference),
                     value: center.currentToast
+                )
+                .animation(
+                    LumiMotion.enabled(LumiMotion.statusPresentation, preference: motionPreference),
+                    value: center.currentLoading
                 )
                 .allowsHitTesting(false)
             }
