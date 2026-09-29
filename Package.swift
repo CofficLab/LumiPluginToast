@@ -37,6 +37,7 @@ let package = Package(
                 "PluginToast",
                 .product(name: "KernelCore", package: "LumiKernel"),
                 .product(name: "ProviderToast", package: "LumiProviders"),
+                .product(name: "LumiUI", package: "LumiUI"),
             ]
         ),
     ]
