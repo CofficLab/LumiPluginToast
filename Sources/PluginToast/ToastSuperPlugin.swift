@@ -20,16 +20,12 @@ public final class ToastSuperPlugin: SuperPlugin, SuperLog {
         category: "Toast"
     )
 
-    public let id = "com.coffic.lumi.plugin.toast"
+    /// 默认插件标识。宿主可在装配时传入自己的 id。
+    public static let defaultPluginID = "com.coffic.lumi.plugin.toast"
+
+    public let id: String
     public let order = 10
-    public let metadata = PluginMetadata(
-        id: "com.coffic.lumi.plugin.toast",
-        name: "Toast",
-        description: "Shared toast and persistent error notifications",
-        category: .core,
-        stage: .stable,
-        policy: .required
-    )
+    public let metadata: PluginMetadata
 
     /// The observable state machine rendered by `ToastOverlay`.
     public let center = ToastCenter()
@@ -51,10 +47,25 @@ public final class ToastSuperPlugin: SuperPlugin, SuperLog {
     /// Root-view implementations differ between host applications. The host
     /// therefore injects the small mount/unmount operation instead of the
     /// shared package depending on one concrete RootViewProviding module.
+    ///
+    /// - Parameters:
+    ///   - id: 插件唯一标识，决定 `PluginMetadata.id` 与 About 条目 id。
+    ///   - overlayInstaller: 宿主注入的浮层挂载操作。
+    ///   - overlayUninstaller: 宿主注入的浮层卸载操作。
     public init(
+        id: String = ToastSuperPlugin.defaultPluginID,
         overlayInstaller: OverlayInstaller? = nil,
         overlayUninstaller: OverlayUninstaller? = nil
     ) {
+        self.id = id
+        self.metadata = PluginMetadata(
+            id: id,
+            name: "Toast",
+            description: "Shared toast and persistent error notifications",
+            category: .core,
+            stage: .stable,
+            policy: .required
+        )
         self.overlayInstaller = overlayInstaller
         self.overlayUninstaller = overlayUninstaller
     }

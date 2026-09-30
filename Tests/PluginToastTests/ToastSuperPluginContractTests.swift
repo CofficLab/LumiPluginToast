@@ -21,6 +21,14 @@ final class ToastSuperPluginContractTests: XCTestCase {
         XCTAssertEqual(ToastSuperPlugin.overlayID, "lumi-plugin-toast", "根覆盖层应使用稳定的挂载标识")
     }
 
+    func testCustomIDIsApplied() {
+        let plugin = ToastSuperPlugin(id: "com.example.custom.plugin.toast")
+
+        XCTAssertEqual(plugin.id, "com.example.custom.plugin.toast")
+        XCTAssertEqual(plugin.metadata.id, plugin.id)
+        XCTAssertEqual(ToastSuperPlugin.defaultPluginID, "com.coffic.lumi.plugin.toast")
+    }
+
     func testDoubleBootDoesNotThrowAndKeepsSingleProvider() throws {
         let kernel = KernelCoreContainer()
         let plugin = ToastSuperPlugin()
