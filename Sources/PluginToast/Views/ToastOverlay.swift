@@ -15,7 +15,9 @@ public struct ToastOverlay<Content: View>: View {
     @ObservedObject private var center: ToastCenter
     @LumiMotionPreferenceReader private var motionPreference
     @Environment(\.toastWindowID) private var windowID
-    @Environment(\.controlActiveState) private var activeState
+    #if os(macOS)
+        @Environment(\.controlActiveState) private var activeState
+    #endif
 
     public init(content: Content, center: ToastCenter) {
         self.content = content
@@ -24,12 +26,16 @@ public struct ToastOverlay<Content: View>: View {
 
     /// 错误面板只在一个窗口显示：
     /// - 带来源窗口标识：仅在来源窗口渲染；
-    /// - 无来源：仅在当前活动（key）窗口兜底渲染。
+    /// - 无来源：macOS 上仅在当前活动（key）窗口兜底渲染，iOS 单场景直接渲染。
     private func shouldDisplayError(_ error: LumiErrorNotice) -> Bool {
         if let source = error.sourceWindowID {
             return source == windowID
         }
-        return activeState == .key
+        #if os(macOS)
+            return activeState == .key
+        #else
+            return true
+        #endif
     }
 
     public var body: some View {
