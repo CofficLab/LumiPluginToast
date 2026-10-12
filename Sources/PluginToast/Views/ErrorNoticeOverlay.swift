@@ -22,14 +22,30 @@ struct ErrorNoticeOverlay: View {
         self.center = center
     }
 
-    var body: some View {
-        ZStack {
-            Color.black.opacity(0.22)
-                .ignoresSafeArea()
-                .transition(.opacity)
+    private static let minPanelWidth: CGFloat = 280
+    private static let idealPanelWidth: CGFloat = 620
+    private static let maxPanelWidth: CGFloat = 720
+    private static let windowMargin = DesignTokens.Spacing.lg
 
-            panel
-                .transition(.scale(scale: 0.96).combined(with: .opacity))
+    var body: some View {
+        GeometryReader { geo in
+            let availableWidth = geo.size.width - Self.windowMargin * 2
+            let availableHeight = geo.size.height - Self.windowMargin * 2
+            let panelWidth = min(
+                Self.maxPanelWidth,
+                max(Self.minPanelWidth, availableWidth)
+            )
+
+            ZStack {
+                Color.black.opacity(0.22)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+
+                panel
+                    .frame(width: panelWidth)
+                    .frame(maxHeight: max(220, availableHeight))
+                    .transition(.scale(scale: 0.96).combined(with: .opacity))
+            }
         }
         .zIndex(1)
         .animation(
@@ -57,14 +73,12 @@ extension ErrorNoticeOverlay {
             footer
         }
         .padding(DesignTokens.Spacing.lg)
-        .frame(minWidth: 480, idealWidth: 620, maxWidth: 720)
         .appSurface(
             style: .panel,
             cornerRadius: DesignTokens.Radius.md,
             borderColor: theme.appSubtleBorder
         )
         .appShadow(.xxxl)
-        .padding(DesignTokens.Spacing.lg)
     }
 
     private var header: some View {
@@ -74,6 +88,8 @@ extension ErrorNoticeOverlay {
             Text(error.title)
                 .font(DesignTokens.Typography.title3)
                 .foregroundStyle(theme.textPrimary)
+                .lineLimit(2)
+                .minimumScaleFactor(0.8)
 
             Spacer(minLength: DesignTokens.Spacing.sm)
         }
@@ -88,7 +104,7 @@ extension ErrorNoticeOverlay {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(DesignTokens.Spacing.sm)
         }
-        .frame(minHeight: 100, maxHeight: 280)
+        .frame(minHeight: 80, maxHeight: .infinity)
         .appSurface(
             style: .subtle,
             cornerRadius: DesignTokens.Radius.sm,
@@ -109,6 +125,7 @@ extension ErrorNoticeOverlay {
                 center.dismissError()
             }
             .keyboardShortcut(.defaultAction)
+            .fixedSize()
         }
         .padding(.top, DesignTokens.Spacing.md)
     }

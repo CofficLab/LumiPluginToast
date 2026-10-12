@@ -39,8 +39,12 @@ public final class ToastCenter: ObservableObject, ToastLoadingProviding {
         }
     }
 
-    public func presentError(title: String, message: String) {
-        currentError = LumiErrorNotice(title: title, message: message)
+    public func presentError(title: String, message: String, sourceWindowID: String?) {
+        currentError = LumiErrorNotice(
+            title: title,
+            message: message,
+            sourceWindowID: sourceWindowID
+        )
     }
 
     public func dismissError() {

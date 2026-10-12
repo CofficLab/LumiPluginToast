@@ -14,10 +14,22 @@ public struct ToastOverlay<Content: View>: View {
     private let content: Content
     @ObservedObject private var center: ToastCenter
     @LumiMotionPreferenceReader private var motionPreference
+    @Environment(\.toastWindowID) private var windowID
+    @Environment(\.controlActiveState) private var activeState
 
     public init(content: Content, center: ToastCenter) {
         self.content = content
         self.center = center
+    }
+
+    /// 错误面板只在一个窗口显示：
+    /// - 带来源窗口标识：仅在来源窗口渲染；
+    /// - 无来源：仅在当前活动（key）窗口兜底渲染。
+    private func shouldDisplayError(_ error: LumiErrorNotice) -> Bool {
+        if let source = error.sourceWindowID {
+            return source == windowID
+        }
+        return activeState == .key
     }
 
     public var body: some View {
@@ -51,7 +63,7 @@ public struct ToastOverlay<Content: View>: View {
                 .allowsHitTesting(false)
             }
             .overlay {
-                if let error = center.currentError {
+                if let error = center.currentError, shouldDisplayError(error) {
                     ErrorNoticeOverlay(error: error, center: center)
                 }
             }
