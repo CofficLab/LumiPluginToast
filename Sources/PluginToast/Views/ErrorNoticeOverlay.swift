@@ -2,6 +2,14 @@ import LumiUI
 import ProviderToast
 import SwiftUI
 
+#if canImport(AppKit)
+import AppKit
+private typealias PlatformFont = NSFont
+#elseif canImport(UIKit)
+import UIKit
+private typealias PlatformFont = UIFont
+#endif
+
 // MARK: - Persistent Error Notice
 
 /// 持久化错误面板：保留完整信息，支持滚动、文本选择、复制与用户确认关闭。
@@ -74,18 +82,32 @@ struct ErrorNoticeOverlay: View {
 
     /// 估算错误内容不换行时的固有宽度（消息与标题取较宽者）。
     static func intrinsicContentWidth(for error: LumiErrorNotice) -> CGFloat {
-        let messageFont = NSFont.monospacedSystemFont(ofSize: 13, weight: .regular)
-        let titleFont = NSFont.systemFont(ofSize: 20, weight: .semibold)
+        let messageFont = PlatformFont.monospacedSystemFont(ofSize: 13, weight: .regular)
+        let titleFont = PlatformFont.systemFont(ofSize: 20, weight: .semibold)
 
         let messageWidth = error.message
             .split(separator: "\n", omittingEmptySubsequences: false)
-            .map { ($0 as NSString).size(withAttributes: [.font: messageFont]).width }
+            .map { measuredWidth(of: String($0), font: messageFont) }
             .max() ?? 0
-        let titleWidth = (error.title as NSString).size(withAttributes: [.font: titleFont]).width
+        let titleWidth = measuredWidth(of: error.title, font: titleFont)
 
         // 叠加消息区内边距与面板内边距，避免文字贴边。
         let horizontalInsets = DesignTokens.Spacing.sm * 2 + DesignTokens.Spacing.lg * 2
         return max(messageWidth, titleWidth) + horizontalInsets
+    }
+
+    /// 单行文本在给定字体下的像素宽度（跨平台实现）。
+    private static func measuredWidth(of text: String, font: PlatformFont) -> CGFloat {
+        #if canImport(AppKit)
+        return (text as NSString).size(withAttributes: [.font: font]).width
+        #else
+        return (text as NSString).boundingRect(
+            with: CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude),
+            options: [.usesLineFragmentOrigin, .usesFontLeading],
+            attributes: [.font: font],
+            context: nil
+        ).width
+        #endif
     }
 }
 
