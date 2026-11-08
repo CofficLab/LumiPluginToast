@@ -1,5 +1,7 @@
 # LumiPluginToast
 
+📖 English | [中文版](README_zh.md)
+
 `LumiPluginToast` is the shared Toast implementation for Lumi-family apps.
 It turns the `ProviderToast` contract into a reusable UI plugin that works on
 macOS and iOS.
