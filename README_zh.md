@@ -23,7 +23,7 @@
 添加包，并在宿主的插件工厂中注册 `ToastSuperPlugin`：
 
 ```swift
-.package(url: "https://github.com/CofficLab/LumiPluginToast.git", from: "1.0.0")
+.package(url: "https://github.com/lumi-softworks/LumiPluginToast.git", from: "1.0.0")
 ```
 
 ```swift
